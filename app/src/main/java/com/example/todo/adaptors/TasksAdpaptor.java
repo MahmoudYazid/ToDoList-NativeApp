@@ -28,8 +28,9 @@ import java.util.zip.Inflater;
 
 public class TasksAdpaptor extends RecyclerView.Adapter<TasksAdpaptor.ViewHolderController>{
 
-    List<DbTasksEntity> DataList;
+    public List<DbTasksEntity> DataList;
     TasksDb DbObj;
+    public IOnTaskClickListner OnClickLisnterRef;
     public TasksAdpaptor(List<DbTasksEntity> DataInput,TasksDb x){
 
         this.DataList=DataInput;
@@ -57,19 +58,27 @@ public class TasksAdpaptor extends RecyclerView.Adapter<TasksAdpaptor.ViewHolder
         TextView textView = holder.itemView.findViewById(R.id.textView);
         TextView textViewDate = holder.itemView.findViewById(R.id.textView2);
         CheckBox CheckBoxView = holder.itemView.findViewById(R.id.checkBox);
+        TextView updateTextView3 = holder.itemView.findViewById(R.id.textView3);
+
         textView.setText(task1.getTaks());
         textViewDate.setText(task1.getDay());
+
+
+        updateTextView3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                OnClickLisnterRef.onTaskClickUpdateTask(task1.getId(),textView.getText().toString());
+            }
+        });
 
         CheckBoxView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     // Handle the checked state (perform delete operation)
+                        OnClickLisnterRef.onTaskClickDelete(task1,position);
 
-                        DbObj.userDao().delete(task1);
-                        DataList.remove(task1);
 
-                        notifyItemRemoved(position);
 
                 }
             }});
@@ -95,6 +104,7 @@ public class TasksAdpaptor extends RecyclerView.Adapter<TasksAdpaptor.ViewHolder
 
             TextView taskNameTextView = itemView.findViewById(R.id.textView);
             TextView taskDateTextView = itemView.findViewById(R.id.textView2);
+            TextView updateTextView3 = itemView.findViewById(R.id.textView3);
             CheckBox CheckBoxView = itemView.findViewById(R.id.checkBox);
 
 

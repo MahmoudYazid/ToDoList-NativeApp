@@ -17,4 +17,7 @@ interface  Dao {
     @Query("SELECT * FROM taskstable")
     fun getAll(): List<DbTasksEntity>?
 
+    @Query("UPDATE taskstable SET  taks= :TaskText WHERE id =:id")
+    fun UpdateTask(id:Int , TaskText:String)
+
 }

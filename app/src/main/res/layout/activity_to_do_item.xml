@@ -21,7 +21,7 @@
 
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
+        <EditText
             android:id="@+id/textView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -57,7 +57,7 @@
             android:layout_width="50dp"
             android:layout_height="30dp"
             android:layout_marginStart="30dp"
-            android:text="@string/cross"
+            android:text="@string/modify"
 
             android:background="@drawable/three_rect_shape"
             android:gravity="center"

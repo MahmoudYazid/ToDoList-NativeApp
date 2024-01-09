@@ -7,9 +7,12 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.example.todo.ViewModel.ViewModelClass
+import com.example.todo.adaptors.IOnTaskClickListner
 import com.example.todo.adaptors.TasksAdpaptor
 import com.example.todo.repository.DbTasksEntity
 import com.example.todo.repository.TasksDb
@@ -22,7 +25,7 @@ import java.time.LocalDate
 
 class MainActivity : AppCompatActivity() {
 
-
+    val viewmodelClassInst:ViewModelClass by viewModels();
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,31 +46,16 @@ class MainActivity : AppCompatActivity() {
 
 
 
+        viewmodelClassInst.GetData(this@MainActivity)
 
         val adaptorData = TasksAdpaptor(mutableListOf(),instance)
-
-
-
-
-
-
-
-
-
-
+        viewmodelClassInst.LiveDataRef.observe(this@MainActivity) {
+            adaptorData.SetData(it)
+            adaptorData.notifyDataSetChanged()
+        }
 
 
         // Fetch data from the database using coroutines
-        lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                val dataList: List<DbTasksEntity>? = TasksDb.getInstance(context = this@MainActivity).userDao().getAll()
-                // Update the UI on the main thread with the fetched data
-                withContext(Dispatchers.Main) {
-                    adaptorData.SetData(dataList)
-                    adaptorData.notifyDataSetChanged()
-                }
-            }
-        }
 
 
 
@@ -88,33 +76,50 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
-
-
-        SendBtmRef.setOnClickListener {
-            lifecycleScope.launch {
-                // Use withContext to switch to the IO dispatcher for database operation
-                withContext(Dispatchers.IO) {
-                    val newTask = DbTasksEntity(
-                        id = null,
-                        taks = SendTextRef.text.toString(),
-                        day = LocalDate.now().toString() ,
-                        finished = "no"
-                    )
-
-                    // Insert the new task into the database
-                    TasksDb.getInstance(context = this@MainActivity).userDao().insertAll(newTask)
-
-                    // Fetch updated data from the database
-                    val updatedDataList: List<DbTasksEntity>? =
-                        TasksDb.getInstance(context = this@MainActivity).userDao().getAll()
-
-                    // Update the adapter with the new data
-                    withContext(Dispatchers.Main) {
-                        adaptorData.SetData(updatedDataList)
-                        adaptorData.notifyDataSetChanged()
+        adaptorData.OnClickLisnterRef= object :IOnTaskClickListner{
+            override fun onTaskClickDelete(Task: DbTasksEntity, positin: Int) {
+                lifecycleScope.launch{
+                    withContext(Dispatchers.IO){
+                        TasksDb.getInstance(this@MainActivity).userDao().delete(Task);
 
                     }
+                    withContext(Dispatchers.Main){
+                        adaptorData.notifyItemRemoved(positin)
+                        adaptorData.DataList.remove(Task)
+                    }
+                }
+
+            }
+
+            override fun onTaskClickUpdateTask(TaskID: Int, NewTaskText: String) {
+                lifecycleScope.launch{
+                    withContext(Dispatchers.Main){
+                        viewmodelClassInst.ModifyTask(this@MainActivity,TaskID,NewTaskText)
+
+                        //show toast
+
+                    }
+                }
+            }
+
+        }
+
+        SendBtmRef.setOnClickListener {
+
+                // Use withContext to switch to the IO dispatcher for database operation
+                    lifecycleScope.launch {
+                        withContext(Dispatchers.Main){
+                            val newTask = DbTasksEntity(
+                                id = null,
+                                taks = SendTextRef.text.toString(),
+                                day = LocalDate.now().toString() ,
+                                finished = "no"
+                            )
+                            viewmodelClassInst.AddTask(newTask,this@MainActivity)
+
+
+                        }
+
                 }
             }
         }
@@ -133,4 +138,4 @@ class MainActivity : AppCompatActivity() {
 
 
     }
-}
+
